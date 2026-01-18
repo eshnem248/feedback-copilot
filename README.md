@@ -3,7 +3,6 @@
 An AI-first feedback exploration tool for Product Managers with advanced features for analysis, visualization, and action.
 
 ## Background
-## Background
 Product managers are responsible for turning fragmented signals into clear product stories that drive decisions. In practice, feedback is often lost across tools and platforms, making it hard to understand where issues originate and why they occur. The Feedback Intelligence Copilot helps PMs navigate this ambiguity by turning natural-language questions into structured insights across multiple feedback sources. Overall, it helps PMs cut noise, amplify signal, and translate scattered feedback into structured insights and results.
 
 ### 🌅 Morning Briefing Mode
