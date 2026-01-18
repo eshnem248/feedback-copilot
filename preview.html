@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feedback Copilot v4 Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --bg-gradient: linear-gradient(160deg, #dbeafe 0%, #ede9fe 50%, #fce7f3 100%);
+      --surface: #ffffff;
+      --surface-secondary: #f8fafc;
+      --text: #0f172a;
+      --text-secondary: #64748b;
+      --text-muted: #94a3b8;
+      --border: #e2e8f0;
+      --accent: #6366f1;
+      --accent-light: #eef2ff;
+      --positive: #10b981;
+      --positive-light: #d1fae5;
+      --negative: #ef4444;
+      --negative-light: #fee2e2;
+      --warning: #f59e0b;
+      --warning-light: #fef3c7;
+    }
+    
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg-gradient);
+      background-attachment: fixed;
+      min-height: 100vh;
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    .app {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+    
+    .logo {
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+    
+    .logo-icon { color: var(--accent); }
+    
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .icon-btn svg { width: 18px; height: 18px; }
+    
+    .command-box {
+      background: var(--surface);
+      border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 20px rgba(99,102,241,0.1);
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+    
+    .input-row {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem;
+    }
+    
+    .command-input {
+      flex: 1;
+      padding: 0.875rem 1rem;
+      font-family: inherit;
+      font-size: 1rem;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      outline: none;
+    }
+    
+    .submit-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: none;
+      background: var(--text);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .submit-btn svg { width: 18px; height: 18px; }
+    
+    .sources-row {
+      display: flex;
+      gap: 0.375rem;
+      padding: 0.625rem 1rem;
+      border-top: 1px solid var(--border);
+    }
+    
+    .source-chip {
+      padding: 0.375rem 0.625rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .source-chip.active {
+      background: var(--accent-light);
+      border-color: transparent;
+      color: var(--accent);
+    }
+    
+    /* Conversation History */
+    .history-item {
+      background: var(--surface-secondary);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.8125rem;
+    }
+    
+    .history-q {
+      color: var(--accent);
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+    
+    .history-a {
+      color: var(--text-secondary);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    /* Summary Card */
+    .summary-card {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .summary-text {
+      font-size: 1.0625rem;
+      line-height: 1.7;
+    }
+    
+    .summary-meta {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    
+    .export-btns { display: flex; gap: 0.375rem; }
+    
+    .export-btn {
+      padding: 0.375rem 0.625rem;
+      font-family: inherit;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .export-btn:hover { color: var(--text); border-color: var(--text-secondary); }
+    
+    /* Sections */
+    .section {
+      background: var(--surface);
+      border-radius: 12px;
+      margin-bottom: 0.5rem;
+      overflow: hidden;
+    }
+    
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    
+    .section-header:hover { background: rgba(0,0,0,0.01); }
+    
+    .section-title {
+      font-size: 0.875rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .badge {
+      font-size: 0.6875rem;
+      font-weight: 500;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+    
+    .badge.warning { background: var(--warning-light); color: var(--warning); }
+    
+    .chevron {
+      width: 18px;
+      height: 18px;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+    }
+    
+    .section.open .chevron { transform: rotate(180deg); }
+    
+    .section-content {
+      display: none;
+      padding: 0 1.25rem 1.25rem;
+    }
+    
+    .section.open .section-content { display: block; }
+    
+    /* Themes with Sparklines */
+    .theme-item {
+      padding: 0.875rem 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    
+    .theme-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .theme-item:first-child { padding-top: 0; }
+    
+    .theme-info { flex: 1; }
+    
+    .theme-name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .sentiment-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    
+    .sentiment-dot.negative { background: var(--negative); }
+    .sentiment-dot.positive { background: var(--positive); }
+    .sentiment-dot.mixed { background: var(--warning); }
+    
+    .trend-indicator { font-size: 0.75rem; }
+    .trend-indicator.up { color: var(--negative); }
+    .trend-indicator.down { color: var(--positive); }
+    .trend-indicator.flat { color: var(--text-muted); }
+    
+    .theme-desc {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+      line-height: 1.5;
+    }
+    
+    .sparkline {
+      width: 64px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+    
+    .sparkline svg {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .sparkline path {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .sparkline.negative path { stroke: var(--negative); }
+    
+    /* Cluster Map */
+    .cluster-map {
+      position: relative;
+      width: 100%;
+      height: 180px;
+      background: var(--surface-secondary);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .cluster-bubble {
+      position: absolute;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.12;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .cluster-bubble:hover { opacity: 0.25; transform: scale(1.05); }
+    
+    .cluster-bubble.negative { background: var(--negative); }
+    .cluster-bubble.warning { background: var(--warning); }
+    
+    .cluster-label {
+      position: absolute;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    
+    /* Action Items */
+    .action-item {
+      padding: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 0.75rem;
+    }
+    
+    .action-item:last-child { margin-bottom: 0; }
+    
+    .action-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .action-title {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    
+    .action-priority {
+      font-size: 0.625rem;
+      font-weight: 600;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    
+    .action-priority.P0 { background: var(--negative-light); color: var(--negative); }
+    .action-priority.P1 { background: var(--warning-light); color: var(--warning); }
+    .action-priority.P2 { background: var(--surface-secondary); color: var(--text-secondary); }
+    
+    .action-desc {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.75rem;
+      line-height: 1.5;
+    }
+    
+    .action-meta {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .action-tag {
+      font-size: 0.6875rem;
+      padding: 0.25rem 0.5rem;
+      background: var(--surface-secondary);
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+    
+    .action-export {
+      margin-left: auto;
+      padding: 0.375rem 0.75rem;
+      font-family: inherit;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: var(--accent);
+      background: var(--accent-light);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .action-export:hover { background: var(--accent); color: white; }
+    
+    /* Follow-ups */
+    .followups {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+    }
+    
+    .followup-btn {
+      padding: 0.5rem 0.875rem;
+      font-family: inherit;
+      font-size: 0.8125rem;
+      color: var(--accent);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .followup-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+    
+    /* Morning Briefing Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 1rem;
+    }
+    
+    .modal-overlay.visible { display: flex; }
+    
+    .modal {
+      background: var(--surface);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 420px;
+      max-height: 85vh;
+      overflow: auto;
+      animation: modalIn 0.2s ease;
+    }
+    
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    
+    .modal-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    
+    .modal-title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    
+    .modal-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+    
+    .close-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: none;
+      background: var(--surface-secondary);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .close-btn:hover { background: var(--border); }
+    
+    .modal-content { padding: 1.5rem; }
+    
+    .briefing-section { margin-bottom: 1.5rem; }
+    .briefing-section:last-child { margin-bottom: 0; }
+    
+    .briefing-section-title {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+    
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+    }
+    
+    .stat-card {
+      background: var(--surface-secondary);
+      border-radius: 10px;
+      padding: 0.875rem;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    
+    .stat-value.negative { color: var(--negative); }
+    .stat-value.positive { color: var(--positive); }
+    
+    .stat-label {
+      font-size: 0.6875rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+    
+    .issue-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .issue-item:last-child { border-bottom: none; }
+    
+    .issue-name { font-size: 0.875rem; }
+    
+    .issue-count {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--negative);
+      background: var(--negative-light);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+    }
+    
+    .critical-item {
+      background: var(--negative-light);
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.8125rem;
+      line-height: 1.5;
+    }
+    
+    .critical-item:last-child { margin-bottom: 0; }
+    
+    .critical-source {
+      font-size: 0.6875rem;
+      color: var(--negative);
+      margin-top: 0.375rem;
+    }
+    
+    .win-item {
+      background: var(--positive-light);
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.8125rem;
+      font-style: italic;
+      line-height: 1.5;
+    }
+    
+    .win-item:last-child { margin-bottom: 0; }
+    
+    /* Keyboard Shortcuts Modal */
+    .shortcuts-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      padding: 1.25rem 1.5rem 0;
+    }
+    
+    .shortcuts-list { padding: 0 1.5rem 1.5rem; }
+    
+    .shortcut-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+    }
+    
+    .shortcut-keys { display: flex; gap: 0.25rem; }
+    
+    .key {
+      padding: 0.25rem 0.5rem;
+      background: var(--surface-secondary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      font-family: inherit;
+    }
+    
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    
+    footer a { color: var(--text-secondary); text-decoration: none; }
+    
+    .kbd-hint {
+      margin-top: 0.5rem;
+    }
+    
+    .kbd-hint .key {
+      font-size: 0.625rem;
+      padding: 0.125rem 0.375rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">✦</span> Feedback Copilot
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" onclick="toggleBriefing()" title="Morning Briefing (B)">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+        </button>
+        <button class="icon-btn" onclick="toggleShortcuts()" title="Keyboard Shortcuts (?)">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+    
+    <!-- Command Box -->
+    <div class="command-box">
+      <div class="input-row">
+        <input type="text" class="command-input" value="What are users frustrated about?" placeholder="Ask about your feedback...">
+        <button class="submit-btn">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
+        </button>
+      </div>
+      <div class="sources-row">
+        <span class="source-chip active">Support</span>
+        <span class="source-chip active">GitHub</span>
+        <span class="source-chip active">Discord</span>
+        <span class="source-chip">Twitter</span>
+        <span class="source-chip active">In-App</span>
+      </div>
+    </div>
+    
+    <!-- Conversation History -->
+    <div class="history-item">
+      <div class="history-q">What do users love about the product?</div>
+      <div class="history-a">Users consistently praise the developer experience, quick onboarding, and responsive community support...</div>
+    </div>
+    
+    <!-- Summary -->
+    <div class="summary-card">
+      <p class="summary-text">Users are experiencing frustration in three main areas: <strong>API reliability</strong> (502 errors, latency spikes), <strong>documentation quality</strong> (outdated examples, missing guides), and <strong>authentication friction</strong> (SSO blockers, silent MFA failures). Critical issues include production outages affecting customer applications with no status page updates.</p>
+      <div class="summary-meta">
+        <span>30 items from support, github, discord, in_app</span>
+        <div class="export-btns">
+          <button class="export-btn">Markdown</button>
+          <button class="export-btn">Slack</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Themes with Sparklines -->
+    <div class="section open" onclick="this.classList.toggle('open')">
+      <div class="section-header">
+        <span class="section-title">Key Themes <span class="badge">3</span></span>
+        <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </div>
+      <div class="section-content">
+        <div class="theme-item">
+          <div class="theme-info">
+            <div class="theme-name">
+              <span class="sentiment-dot negative"></span>
+              API Reliability
+              <span class="trend-indicator up">↑</span>
+            </div>
+            <div class="theme-desc">502 errors affecting 10% of requests, latency spikes, no status page updates during outages</div>
+          </div>
+          <div class="sparkline negative">
+            <svg viewBox="0 0 64 28"><path d="M2,20 L12,18 L22,22 L32,15 L42,12 L52,8 L62,5"/></svg>
+          </div>
+        </div>
+        <div class="theme-item">
+          <div class="theme-info">
+            <div class="theme-name">
+              <span class="sentiment-dot negative"></span>
+              Documentation Gaps
+              <span class="trend-indicator flat">→</span>
+            </div>
+            <div class="theme-desc">Outdated API examples, missing practical guides, stale "coming soon" pages unchanged for months</div>
+          </div>
+          <div class="sparkline">
+            <svg viewBox="0 0 64 28"><path d="M2,14 L12,16 L22,12 L32,14 L42,13 L52,15 L62,14"/></svg>
+          </div>
+        </div>
+        <div class="theme-item">
+          <div class="theme-info">
+            <div class="theme-name">
+              <span class="sentiment-dot negative"></span>
+              Authentication Issues
+              <span class="trend-indicator up">↑</span>
+            </div>
+            <div class="theme-desc">SSO implementation blocked by docs, MFA failing silently, verification emails not arriving</div>
+          </div>
+          <div class="sparkline negative">
+            <svg viewBox="0 0 64 28"><path d="M2,22 L12,20 L22,18 L32,16 L42,14 L52,10 L62,8"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Theme Clusters -->
+    <div class="section" onclick="this.classList.toggle('open')">
+      <div class="section-header">
+        <span class="section-title">Theme Clusters</span>
+        <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </div>
+      <div class="section-content">
+        <div class="cluster-map">
+          <div class="cluster-bubble negative" style="left: 25%; top: 35%; width: 70px; height: 70px; transform: translate(-50%, -50%);"></div>
+          <div class="cluster-label" style="left: 25%; top: 58%;">Reliability</div>
+          
+          <div class="cluster-bubble" style="left: 60%; top: 30%; width: 55px; height: 55px; transform: translate(-50%, -50%);"></div>
+          <div class="cluster-label" style="left: 60%; top: 50%;">Documentation</div>
+          
+          <div class="cluster-bubble warning" style="left: 75%; top: 65%; width: 45px; height: 45px; transform: translate(-50%, -50%);"></div>
+          <div class="cluster-label" style="left: 75%; top: 82%;">Auth & Access</div>
+          
+          <div class="cluster-bubble" style="left: 35%; top: 70%; width: 35px; height: 35px; transform: translate(-50%, -50%);"></div>
+          <div class="cluster-label" style="left: 35%; top: 85%;">Pricing</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Action Items -->
+    <div class="section open" onclick="event.stopPropagation()">
+      <div class="section-header" onclick="this.parentElement.classList.toggle('open')">
+        <span class="section-title">📋 Action Items <span class="badge">3</span></span>
+        <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </div>
+      <div class="section-content">
+        <div class="action-item">
+          <div class="action-header">
+            <span class="action-title">Investigate /v2/analyze 502 errors</span>
+            <span class="action-priority P0">P0</span>
+          </div>
+          <div class="action-desc">Debug intermittent 502 errors affecting 10% of requests since last maintenance window. Check load balancer config and endpoint health.</div>
+          <div class="action-meta">
+            <span class="action-tag">bug</span>
+            <span class="action-tag">medium effort</span>
+            <button class="action-export" onclick="event.stopPropagation()">Copy as Jira</button>
+          </div>
+        </div>
+        <div class="action-item">
+          <div class="action-header">
+            <span class="action-title">Audit SSO documentation for accuracy</span>
+            <span class="action-priority P1">P1</span>
+          </div>
+          <div class="action-desc">Review and update SSO implementation docs to match current API version. Add working code examples for enterprise customers.</div>
+          <div class="action-meta">
+            <span class="action-tag">docs</span>
+            <span class="action-tag">small effort</span>
+            <button class="action-export" onclick="event.stopPropagation()">Copy as Jira</button>
+          </div>
+        </div>
+        <div class="action-item">
+          <div class="action-header">
+            <span class="action-title">Add error states to MFA flow</span>
+            <span class="action-priority P1">P1</span>
+          </div>
+          <div class="action-desc">Implement proper error messages when MFA setup fails instead of silent redirect. Include retry guidance and support contact.</div>
+          <div class="action-meta">
+            <span class="action-tag">feature</span>
+            <span class="action-tag">small effort</span>
+            <button class="action-export" onclick="event.stopPropagation()">Copy as Jira</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Risks -->
+    <div class="section" onclick="this.classList.toggle('open')">
+      <div class="section-header">
+        <span class="section-title">Risks <span class="badge warning">2</span></span>
+        <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </div>
+      <div class="section-content">
+        <div style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border);">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--negative); margin-top: 0.375rem; flex-shrink: 0;"></span>
+          <span style="font-size: 0.8125rem;">Production API outages affecting customer applications with no status page updates</span>
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem 0;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--warning); margin-top: 0.375rem; flex-shrink: 0;"></span>
+          <span style="font-size: 0.8125rem;">Enterprise SSO rollouts blocked by documentation mismatches</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Evidence -->
+    <div class="section" onclick="this.classList.toggle('open')">
+      <div class="section-header">
+        <span class="section-title">Evidence</span>
+        <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </div>
+      <div class="section-content">
+        <div style="padding: 0.875rem 0; border-bottom: 1px solid var(--border);">
+          <p style="font-size: 0.875rem; font-style: italic; line-height: 1.6;">"Getting random 502 errors on /v2/analyze. Affects about 10% of our requests."</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.375rem;">— support</p>
+        </div>
+        <div style="padding: 0.875rem 0;">
+          <p style="font-size: 0.875rem; font-style: italic; line-height: 1.6;">"MFA setup keeps failing silently. No error message, just redirects back to the setup page."</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.375rem;">— support</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Follow-ups -->
+    <div class="followups">
+      <button class="followup-btn">What specific docs need updating?</button>
+      <button class="followup-btn">How severe are API issues?</button>
+      <button class="followup-btn">What do users love?</button>
+    </div>
+    
+    <footer>
+      Built with <a href="#">Workers</a>, <a href="#">D1</a> & <a href="#">Workers AI</a>
+      <div class="kbd-hint">Press <span class="key">?</span> for keyboard shortcuts</div>
+    </footer>
+  </div>
+  
+  <!-- Morning Briefing Modal -->
+  <div class="modal-overlay" id="briefingModal" onclick="if(event.target===this)toggleBriefing()">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">☀️ Morning Briefing</div>
+          <div class="modal-subtitle">Friday, January 17, 2025</div>
+        </div>
+        <button class="close-btn" onclick="toggleBriefing()">×</button>
+      </div>
+      <div class="modal-content">
+        <div class="briefing-section">
+          <div class="briefing-section-title">This Week's Numbers</div>
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-value">30</div>
+              <div class="stat-label">Total feedback</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value negative">6</div>
+              <div class="stat-label">Urgent items</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value positive">8</div>
+              <div class="stat-label">New today</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="briefing-section">
+          <div class="briefing-section-title">Top Pain Points</div>
+          <div class="issue-item">
+            <span class="issue-name">api</span>
+            <span class="issue-count">8 complaints</span>
+          </div>
+          <div class="issue-item">
+            <span class="issue-name">authentication</span>
+            <span class="issue-count">5 complaints</span>
+          </div>
+          <div class="issue-item">
+            <span class="issue-name">documentation</span>
+            <span class="issue-count">4 complaints</span>
+          </div>
+        </div>
+        
+        <div class="briefing-section">
+          <div class="briefing-section-title">🚨 Critical Items</div>
+          <div class="critical-item">
+            "API down for 20 mins, production affected, no status update."
+            <div class="critical-source">via twitter</div>
+          </div>
+          <div class="critical-item">
+            "Getting random 502 errors on /v2/analyze. Affects 10% of requests."
+            <div class="critical-source">via support</div>
+          </div>
+        </div>
+        
+        <div class="briefing-section">
+          <div class="briefing-section-title">🎉 Wins</div>
+          <div class="win-item">"The DX is incredible! Just shipped my first project."</div>
+          <div class="win-item">"Switched from competitor - build times dropped 60%!"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Keyboard Shortcuts Modal -->
+  <div class="modal-overlay" id="shortcutsModal" onclick="if(event.target===this)toggleShortcuts()">
+    <div class="modal" style="max-width: 320px;">
+      <div class="shortcuts-title">⌨️ Keyboard Shortcuts</div>
+      <div class="shortcuts-list">
+        <div class="shortcut-row">
+          <span>Focus search</span>
+          <div class="shortcut-keys"><span class="key">⌘</span><span class="key">K</span></div>
+        </div>
+        <div class="shortcut-row">
+          <span>Toggle sources</span>
+          <div class="shortcut-keys"><span class="key">1</span><span class="key">-</span><span class="key">5</span></div>
+        </div>
+        <div class="shortcut-row">
+          <span>Morning briefing</span>
+          <div class="shortcut-keys"><span class="key">B</span></div>
+        </div>
+        <div class="shortcut-row">
+          <span>Show shortcuts</span>
+          <div class="shortcut-keys"><span class="key">?</span></div>
+        </div>
+        <div class="shortcut-row">
+          <span>Close modal</span>
+          <div class="shortcut-keys"><span class="key">Esc</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleBriefing() {
+      document.getElementById('briefingModal').classList.toggle('visible');
+    }
+    
+    function toggleShortcuts() {
+      document.getElementById('shortcutsModal').classList.toggle('visible');
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT') return;
+      if (e.key === 'b' || e.key === 'B') toggleBriefing();
+      if (e.key === '?') toggleShortcuts();
+      if (e.key === 'Escape') {
+        document.getElementById('briefingModal').classList.remove('visible');
+        document.getElementById('shortcutsModal').classList.remove('visible');
+      }
+    });
+    
+    // Source chip toggles
+    document.querySelectorAll('.source-chip').forEach(chip => {
+      chip.addEventListener('click', () => chip.classList.toggle('active'));
+    });
+  </script>
+</body>
+</html>

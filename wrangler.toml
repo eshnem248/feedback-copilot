@@ -1,0 +1,12 @@
+# Feedback Copilot v4 - Feature Rich Edition
+name = "feedback-copilot"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[ai]
+binding = "AI"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "feedback-db"
+database_id = "c8f2217e-e8d4-4367-acba-739b58d8652d"
